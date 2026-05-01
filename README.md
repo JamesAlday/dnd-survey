@@ -1,70 +1,104 @@
-# Getting Started with Create React App
+# D&D Survey App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A lightweight survey app for tabletop RPG groups built with Create React App, SurveyJS, Supabase, and Netlify.
 
-## Available Scripts
+The survey itself is taken with very little modification from the "Dungeon Master Evaluation Form" by DeAnn Iwan from Dragon Magazine #43 (November 1980).
 
-In the project directory, you can run:
+The app has two main views:
 
-### `npm start`
+- `/` - fill out and submit the survey
+- `/results` - view SurveyJS analytics charts for collected responses
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## What This Project Does
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Renders a SurveyJS form from `src/survey_json.js`
+- Saves submitted responses to Supabase (`SurveyResults` table)
+- Loads saved responses and visualizes them with SurveyJS `VisualizationPanel`
+- Deploys as a static React app (SPA) on Netlify
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- React (Create React App)
+- `survey-core` + `survey-react-ui`
+- `survey-analytics`
+- `@supabase/supabase-js`
+- Netlify (static hosting + SPA rewrites)
 
-### `npm run build`
+## Project Structure
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- `src/App.js` - survey entry/submission flow
+- `src/ResultsPage.js` - results dashboard flow
+- `src/survey_json.js` - survey definition used by both pages
+- `src/schema.sql` - Supabase table schema reference
+- `public/_redirects` - Netlify SPA routing rules
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Run Locally
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Clone and install dependencies:
 
-### `npm run eject`
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. Start dev server:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+   ```bash
+   npm start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. Open:
+   - `http://localhost:3000/` for the survey
+   - `http://localhost:3000/results` for analytics
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Supabase Setup
 
-## Learn More
+1. Create a Supabase project.
+2. Apply table DDL from `src/schema.sql` (or adapt it).
+3. Add RLS and grants appropriate to your use case.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Recommended baseline:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Public (`anon`) can `INSERT` survey responses
+- Public cannot `UPDATE` or `DELETE` responses
+- Public `SELECT` only if you want `/results` to be publicly viewable
 
-### Code Splitting
+## Security Notes (Important)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- The Supabase anon key is safe to ship in frontend code **only when RLS policies are strict**.
+- Do not rely on obscurity of client keys.
+- For stronger abuse protection, add:
+  - CAPTCHA on submit
+  - rate limiting (Edge Function/API gateway)
+  - optional auth for `/results`
 
-### Analyzing the Bundle Size
+## Netlify Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+This repo is configured as an SPA through `public/_redirects`:
 
-### Making a Progressive Web App
+- `/results/*   /index.html   200`
+- `/*           /index.html   200`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+That allows direct visits to `/results` without 404s/redirect loops.
 
-### Advanced Configuration
+Typical Netlify settings:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Build command: `npm run build`
+- Publish directory: `build`
 
-### Deployment
+## Reusing This Project For Your Own Survey
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+To replicate this for another group or questionnaire:
 
-### `npm run build` fails to minify
+1. Replace survey content in `src/survey_json.js`.
+2. Create your own Supabase project/table(s).
+3. Update Supabase URL/key and table names in:
+   - `src/App.js`
+   - `src/ResultsPage.js`
+4. Apply RLS policies for your chosen access model.
+5. Deploy to Netlify (or any static host supporting SPA rewrites).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Scripts
+
+- `npm start` - run development server
+- `npm run build` - create production build
+- `npm test` - run test watcher
