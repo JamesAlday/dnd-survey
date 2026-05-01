@@ -2,12 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import ResultsPage from './ResultsPage';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const isResultsRoute = window.location.pathname.startsWith('/results');
+
 root.render(
   <React.StrictMode>
-    <App />
+    {isResultsRoute ? <ResultsPage /> : <App />}
   </React.StrictMode>
 );
 
