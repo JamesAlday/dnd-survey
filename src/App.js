@@ -1,25 +1,44 @@
-import logo from './logo.svg';
+import React from "react";
+import { Model } from "survey-core";
+import { Survey } from "survey-react-ui";
+import "survey-core/survey-core.min.css";
 import './App.css';
+import { json } from "./survey_json.js";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+import { createClient } from "@supabase/supabase-js";
 
-export default App;
+const supabase = createClient(
+  "https://feflicpsebdapxekthop.supabase.co",
+  "sb_publishable_203p_54SM-kXGuwgavMacA_ApMNTEB9"
+);
+
+function SurveyComponent() {
+    const survey = new Model(json);
+    survey.onCompleting.add(async (_, options) => {
+        console.log(JSON.stringify(survey.data, null, 3));
+        try {
+          const { error } = await supabase
+            .from('SurveyResults')
+            .insert({
+              "survey_schema_id": 1,
+              "survey_results": survey.data
+          })
+
+          if (error) {
+            console.log(error);
+            options.allow = false;
+            options.message = "Could not post the survey results";
+          } else {
+            options.message = "Your data has been saved";
+          }
+        } catch (e) {
+          options.allow = false;
+          options.message = e.message;
+          console.error(e.message);
+        }
+    });
+
+    return (<Survey model={survey} />)
+};
+
+export default SurveyComponent;
